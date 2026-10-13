@@ -1,0 +1,84 @@
+import heapq
+
+# 1. แผนที่ห้าง และ ระยะทางคร่าวๆ ไปเป้าหมาย
+mallmap = {
+    "ทางเข้าฝั่ง McDonald": {"ชั้น 2 (McDonald)": 0.03},
+    "ชั้น 2 (McDonald)": {"ชั้น 3 (ศูนย์อาหาร McDonald)": 0.10},
+    "ชั้น 3 (ศูนย์อาหาร McDonald)": {"หน้าโรงหนัง": 0.07},
+
+    "ทางเข้าฝั่งประตูที่ 2": {"ชั้น 2 (ประตู 2)": 0.01},
+    "ชั้น 2 (ประตู 2)": {"ชั้น 3 (ศูนย์อาหาร ประตู 2)": 0.02},
+    "ชั้น 3 (ศูนย์อาหาร ประตู 2)": {"หน้าโรงหนัง": 0.07},
+
+    "ทางเข้าฝั่งสะพานลอยไทวัสดุ": {"ชั้น 2 (สะพานลอย)": 0.05},
+    "ชั้น 2 (สะพานลอย)": {"ชั้น 3 (ศูนย์อาหาร สะพานลอย)": 0.02},
+    "ชั้น 3 (ศูนย์อาหาร สะพานลอย)": {"หน้าโรงหนัง": 0.07},
+
+    "ทางเข้าฝั่งทางเชื่อมเซ็นทรัลใหม่": {"ชั้น 3 (ศูนย์อาหาร เซ็นทรัลใหม่)": 0.07},
+    "ชั้น 3 (ศูนย์อาหาร เซ็นทรัลใหม่)": {"หน้าโรงหนัง": 0.07},
+    "หน้าโรงหนัง": {}
+}
+
+distance_togoal = {
+    "ทางเข้าฝั่ง McDonald": 0.20, "ชั้น 2 (McDonald)": 0.17, "ชั้น 3 (ศูนย์อาหาร McDonald)": 0.07,
+    "ทางเข้าฝั่งประตูที่ 2": 0.10, "ชั้น 2 (ประตู 2)": 0.09, "ชั้น 3 (ศูนย์อาหาร ประตู 2)": 0.07,
+    "ทางเข้าฝั่งสะพานลอยไทวัสดุ": 0.14, "ชั้น 2 (สะพานลอย)": 0.09, "ชั้น 3 (ศูนย์อาหาร สะพานลอย)": 0.07,
+    "ทางเข้าฝั่งทางเชื่อมเซ็นทรัลใหม่": 0.14, "ชั้น 3 (ศูนย์อาหาร เซ็นทรัลใหม่)": 0.07,
+    "หน้าโรงหนัง": 0.00
+}
+
+def find_shortest_path(start, goal):
+
+    start_score = distance_togoal.get(start, 0.0)
+    box_of_paths = [(start_score, 0.0, start, [start])]
+    
+    checked_places = {} 
+    
+    while box_of_paths:
+        total_score, walked_distance, current_place, current_route = heapq.heappop(box_of_paths)
+        
+        if current_place == goal:
+            return current_route, walked_distance
+            
+        if current_place in checked_places and checked_places[current_place] <= walked_distance:
+            continue
+        checked_places[current_place] = walked_distance
+
+        if current_place in mallmap:
+            for next_place, step_cost in mallmap[current_place].items():
+                new_walked_distance = walked_distance + step_cost
+                new_total_score = new_walked_distance + distance_togoal.get(next_place, 0.0)
+                heapq.heappush(box_of_paths, (new_total_score, new_walked_distance, next_place, current_route + [next_place]))
+                
+    return None, 0.0
+
+# 3. เมนูเลือกจุดเริ่มต้น
+start_options = {
+    "1": "ทางเข้าฝั่ง McDonald",
+    "2": "ทางเข้าฝั่งประตูที่ 2",
+    "3": "ทางเข้าฝั่งสะพานลอยไทวัสดุ",
+    "4": "ทางเข้าฝั่งทางเชื่อมเซ็นทรัลใหม่"
+}
+
+print("=== ระบบค้นหาเส้นทางไป 'หน้าโรงหนัง' ===")
+for key, name in start_options.items():
+    print(f"{key}. {name}")
+
+choice = input("กรอกตัวเลขที่ต้องการ (1-4): ").strip()
+
+if choice in start_options:
+    start_location = start_options[choice]
+    route, total_distance = find_shortest_path(start_location, "หน้าโรงหนัง")
+    
+    print("\n----------------------------------------")
+    if route:
+        print(f"จุดเริ่มต้น: {start_location}")
+        print(f"เป้าหมาย: หน้าโรงหนัง")
+        print("เส้นทางที่สั้นที่สุด:")
+        print(" -> ".join(route))  # ใช้ route ตรงๆ ไม่ต้องผ่านตัวแปรแปลงชื่อ
+        print(f"ระยะทางรวม: {total_distance:.2f} กม. ({int(total_distance * 1000)} เมตร)")
+    else:
+        print("ไม่พบเส้นทาง")
+    print("----------------------------------------")
+else:
+    print("ตัวเลือกไม่ถูกต้อง กรุณารันโปรแกรมใหม่")
